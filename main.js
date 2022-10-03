@@ -1,39 +1,78 @@
-let baseUrl = 'http://127.0.0.1:8000'
-let projectsUrl = baseUrl + '/api/projects/'
+let baseUrl = "http://127.0.0.1:8000";
+let projectsUrl = baseUrl + "/api/projects/";
 
 let getProjects = () => {
-    fetch(projectsUrl)
-    .then(response => response.json())
-    .then(data => {        
-        buildProjects(data)
-    })
-}
+  fetch(projectsUrl)
+    .then((response) => response.json())
+    .then((data) => {
+      buildProjects(data);
+    });
+};
 
 let buildProjects = (projects) => {
-    let projectsWrapper = document.getElementById('projects--wrapper')
+  let projectsWrapper = document.getElementById("projects--wrapper");
+  projectsWrapper.innerHTML == ''
 
-    for (let i = 0; i < projects.length; i++) {
-        const project = projects[i];
-        console.log(project)
+  for (let i = 0; i < projects.length; i++) {
+    const project = projects[i];
+    //console.log(project)
 
-        let projectCard =  `
+    let projectCard = `
             <div class="project--card">
                 <img src="${baseUrl}/${project.featured_image}">
                 <div>
                     <div class="card--header">
                         <h3>${project.title}</h3>      
-                        <strong class="vote--option">&#43; </strong>
-                        <strong class="vote--option">&#8722; </strong>
+                        <strong class="vote--option" data-vote="up" data-project="${
+                          project.id
+                        }">&#43; </strong>
+                        <strong class="vote--option" data-vote="down" data-project="${
+                          project.id
+                        }">&#8722; </strong>
                     </div>                
                 </div>
                 
                 <i>${project.vote_ratio}% Positive feedback </i>
-                <i>${project.description.substring(0,150)} </i>
+                <i>${project.description.substring(0, 150)} </i>
 
             </div>
-        `
-        projectsWrapper.innerHTML += projectCard
-    }
-}
+        `;
+    projectsWrapper.innerHTML += projectCard;
+  }
 
-getProjects()
+  // Add a event listener
+  addVoteEvents();
+};
+
+let addVoteEvents = () => {
+  let voteBtns = document.getElementsByClassName("vote--option");
+
+  for (let i = 0; i < voteBtns.length; i++) {
+    const btn = voteBtns[i];
+    btn.addEventListener("click", (e) => {
+      let token = localStorage.getItem('token')
+      let vote = e.target.dataset.vote;
+      let project = e.target.dataset.project;
+      console.log("PROJECT: ", project, ". VOTE: ", vote);
+
+      // Sending POST to API
+      const url = `${projectsUrl}${project}/vote/`;
+      //console.log("URL: ", url);
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ value: vote }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Success: ", data);
+        });
+    });
+  }
+};
+
+getProjects();
